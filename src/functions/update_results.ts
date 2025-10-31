@@ -1,59 +1,67 @@
 import { Firestore, getFirestore } from "firebase-admin/firestore";
-import { PubSubOptions, onMessagePublished } from "firebase-functions/v2/pubsub";
+import { onMessagePublished } from "firebase-functions/v2/pubsub";
 import { HEADERS, URL } from "../config";
 
 const GAME_DURATION_BUFFER_MS = 110 * 60 * 1000; // 110 minutes
 const COLLECTION = "game-result-v1";
+const API_CHUNK_SIZE = 20;
 
-export const updateResults = onMessagePublished({ topic: 'updateResults', region: 'europe-west1' } as PubSubOptions, async (_) => {
-    const firestore = getFirestore();
+export const updateResults = onMessagePublished({ topic: 'updateResults', region: 'europe-west1' }, async () => {
+    try {
+        const firestore = getFirestore();
+        const cutoffTime = Date.now() - GAME_DURATION_BUFFER_MS;
 
-    const cutoffTime = Date.now() - GAME_DURATION_BUFFER_MS;
+        const querySnapshot = await firestore.collection(COLLECTION)
+            .where("f", "==", false)
+            .where("t", "<", cutoffTime)
+            .get();
 
-    const querySnapshot = await firestore.collection(COLLECTION).where("f", "==", false).where("t", "<", cutoffTime).get();
+        if (querySnapshot.empty) return;
 
-    if (querySnapshot.empty) return;
+        const ids = querySnapshot.docs.map(d => d.id);
+        const chunks = splitArrayIntoChunks(ids, API_CHUNK_SIZE);
 
-    const ids = querySnapshot.docs.map(d => d.id);
+        const writer = firestore.bulkWriter();
 
-    const chunks = splitArrayIntoChunks(ids, 20);
+        await Promise.all(chunks.map(chunk => processGameChunk(chunk, firestore, writer)));
 
-    await Promise.all(chunks.map(chunk => processGameChunk(chunk, firestore)));
-});
+        await writer.close();
+        console.log(`Successfully updated results for ${ids.length} games.`);
+    } catch (error) {
+        console.error("Error during results update:", error);
+    }
+}
+);
 
-const processGameChunk = async (chunkIds: string[], firestore: Firestore) => {
-    const games = await getGames(chunkIds.join('-'));
+const processGameChunk = async (chunkIds: string[], firestore: Firestore, writer: FirebaseFirestore.BulkWriter) => {
+    const games = await fetchGames(chunkIds);
 
-    const updates = games.map(apiGame => {
-        if (apiGame.finished || apiGame.canceled) {
-            const docRef = firestore.collection(COLLECTION).doc(apiGame.id.toString());
+    games.forEach(game => {
+        if (game.finished || game.canceled) {
+            const docRef = firestore.collection(COLLECTION).doc(game.id.toString());
             const data = {
                 f: true,
-                s: apiGame.finished ? [apiGame.h1, apiGame.a1, apiGame.h, apiGame.a] : [],
+                s: game.finished ? [game.h1, game.a1, game.h, game.a] : [],
             };
-            return docRef.set(data, { merge: true });
+            writer.set(docRef, data, { merge: true });
         }
-        return Promise.resolve();
     });
-
-    await Promise.all(updates);
 };
 
-const getGames = async (ids: string) => {
-    const url = `${URL}/fixtures?ids=${ids}`;
-    const res = await fetch(url, { headers: HEADERS });
-    const data: { response?: any[] } = await res.json();
-    const response = data.response ?? [];
-    return response.map(game => new ApiGame(game));
-}
+const fetchGames = async (ids: string[]) => {
+    const url = `${URL}/fixtures?ids=${ids.join('-')}`;
 
-const splitArrayIntoChunks = <T>(arr: T[], chunkSize: number): T[][] => {
-    const result = [];
-    for (let i = 0; i < arr.length; i += chunkSize) {
-        result.push(arr.slice(i, i + chunkSize));
-    }
-    return result;
-}
+    const res = await fetch(url, { headers: HEADERS });
+    if (!res.ok) throw new Error(`Failed to fetch games: ${res.status} ${res.statusText}`);
+
+    const data: { response?: any[] } = await res.json();
+    return (data.response ?? []).map(game => new ApiGame(game));
+};
+
+const splitArrayIntoChunks = <T>(arr: T[], chunkSize: number): T[][] =>
+    Array.from({ length: Math.ceil(arr.length / chunkSize) }, (_, i) =>
+        arr.slice(i * chunkSize, i * chunkSize + chunkSize)
+    );
 
 class ApiGame {
     id: number;
