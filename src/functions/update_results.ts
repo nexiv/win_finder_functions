@@ -1,12 +1,12 @@
 import { Firestore, getFirestore } from "firebase-admin/firestore";
-import { onMessagePublished } from "firebase-functions/v2/pubsub";
 import { HEADERS, URL } from "../config";
+import { onSchedule } from "firebase-functions/scheduler";
 
 const GAME_DURATION_BUFFER_MS = 110 * 60 * 1000; // 110 minutes
 const COLLECTION = "game-result-v1";
 const API_CHUNK_SIZE = 20;
 
-export const updateResults = onMessagePublished({ topic: 'updateResults', region: 'europe-west1' }, async () => {
+export const updateResults =  onSchedule({schedule: 'every 30 minutes', region: 'europe-west1'}, async () => {
     try {
         const firestore = getFirestore();
         const cutoffTime = Date.now() - GAME_DURATION_BUFFER_MS;

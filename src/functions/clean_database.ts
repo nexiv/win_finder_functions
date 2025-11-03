@@ -1,7 +1,7 @@
 import { getFirestore } from "firebase-admin/firestore";
-import { onMessagePublished } from "firebase-functions/v2/pubsub";
+import { onSchedule } from "firebase-functions/scheduler";
 
-export const cleanDatabase = onMessagePublished({ topic: "cleanDatabase", region: "europe-west1" }, async (_) => {
+export const cleanDatabase =  onSchedule({schedule: 'every 24 hours', region: 'europe-west1'}, async (_) => {
     try {
         const firestore = getFirestore();
 

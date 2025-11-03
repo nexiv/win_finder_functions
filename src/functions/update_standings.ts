@@ -1,8 +1,9 @@
 import { BulkWriter, Firestore, getFirestore } from "firebase-admin/firestore";
-import { onMessagePublished } from "firebase-functions/v2/pubsub";
 import { HEADERS, URL } from "../config";
+import { onSchedule } from "firebase-functions/scheduler";
 
-export const updateStandings = onMessagePublished({ topic: 'updateStandings', region: 'europe-west1' }, async () => {
+
+export const updateStandings = onSchedule({schedule: 'every 4 hours', region: 'europe-west1'}, async (_) => {
 
     try {
         const firestore = getFirestore();
@@ -40,17 +41,17 @@ const processLeague = async (league: League, firestore: Firestore, writer: BulkW
 const fetchStandingsFromApi = async (league: League): Promise<any | null> => {
     const url = `${URL}/standings?league=${league.i}&season=${league.s}`;
     const response = await fetch(url, { headers: HEADERS });
-    
+
     if (!response.ok) {
         throw new Error(`API request failed with status ${response.status}: ${response.statusText}`);
     }
-    
+
     const remainingRequests = parseInt(response.headers.get("x-ratelimit-remaining") ?? "20", 10);
-    
+
     if (remainingRequests < 20) {
         await new Promise(resolve => setTimeout(resolve, 5000));
     }
-    
+
     const data: { response?: any[] } = await response.json();
     return data.response?.[0] ?? null;
 };
