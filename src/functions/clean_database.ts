@@ -1,7 +1,7 @@
 import { getFirestore } from "firebase-admin/firestore";
 import { onSchedule } from "firebase-functions/scheduler";
 
-export const cleanDatabase =  onSchedule({schedule: 'every 24 hours', region: 'europe-west1'}, async (_) => {
+export const cleanDatabase = onSchedule({ schedule: 'every 24 hours', region: 'europe-west1' }, async (_) => {
     try {
         const firestore = getFirestore();
 
@@ -29,8 +29,13 @@ export const cleanDatabase =  onSchedule({schedule: 'every 24 hours', region: 'e
         ])
 
         // Queue deletes
-        gamesSnapshot.docs.forEach(doc => bulkWriter.delete(doc.ref));
-        gameResultSnapshot.docs.forEach(doc => bulkWriter.delete(doc.ref));
+        for (const doc of gamesSnapshot.docs) {
+            bulkWriter.delete(doc.ref);
+        }
+        for (const doc of gameResultSnapshot.docs) {
+            bulkWriter.delete(doc.ref);
+            bulkWriter.delete(firestore.doc(`game-last-games-v1/${doc.id}`));
+        }
 
         // Commit all writes
         await bulkWriter.close();
