@@ -83,7 +83,7 @@ const createTeamStatsFromApi = (data: any = {}): number[] => [
     data.played ?? 0,
     data.win ?? 0,
     data.draw ?? 0,
-    data.lost ?? 0,
+    data.lose ?? 0,
     data.goals?.for ?? 0,
     data.goals?.against ?? 0,
 ];
