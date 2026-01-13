@@ -3,6 +3,7 @@ import { setGlobalOptions } from "firebase-functions";
 import { updateResults } from "./functions/update_results";
 import { updateStandings } from "./functions/update_standings";
 import { cleanDatabase } from "./functions/clean_database";
+import { deleteUser } from "./functions/delete_user";
 
 initializeApp();
 setGlobalOptions({ region: 'europe-west1', timeoutSeconds: 300 });
@@ -10,5 +11,6 @@ setGlobalOptions({ region: 'europe-west1', timeoutSeconds: 300 });
 exports.updateResults = updateResults;
 exports.updateStandings = updateStandings;
 exports.cleanDatabase = cleanDatabase;
+exports.deleteUser = deleteUser;
 
 
