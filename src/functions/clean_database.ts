@@ -1,5 +1,5 @@
 import { getFirestore } from "firebase-admin/firestore";
-import { onSchedule } from "firebase-functions/scheduler";
+import { onSchedule } from "firebase-functions/v2/scheduler";
 
 export const cleanDatabase = onSchedule({ schedule: 'every 24 hours', region: 'europe-west1' }, async (_) => {
     try {

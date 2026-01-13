@@ -1,6 +1,6 @@
 import { Firestore, getFirestore } from "firebase-admin/firestore";
 import { HEADERS, URL } from "../config";
-import { onSchedule } from "firebase-functions/scheduler";
+import { onSchedule } from "firebase-functions/v2/scheduler";
 
 const GAME_DURATION_BUFFER_MS = 110 * 60 * 1000; // 110 minutes
 const COLLECTION = "game-result-v1";

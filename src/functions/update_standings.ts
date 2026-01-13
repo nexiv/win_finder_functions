@@ -1,6 +1,6 @@
 import { BulkWriter, Firestore, getFirestore } from "firebase-admin/firestore";
 import { HEADERS, URL } from "../config";
-import { onSchedule } from "firebase-functions/scheduler";
+import { onSchedule } from "firebase-functions/v2/scheduler";
 
 
 export const updateStandings = onSchedule({schedule: 'every 4 hours', region: 'europe-west1'}, async (_) => {
