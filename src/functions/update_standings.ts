@@ -3,7 +3,7 @@ import { HEADERS, URL } from "../config";
 import { onSchedule } from "firebase-functions/v2/scheduler";
 
 
-export const updateStandings = onSchedule({schedule: 'every 4 hours', region: 'europe-west1'}, async (_) => {
+export const updateStandings = onSchedule({schedule: 'every hour', region: 'europe-west1'}, async (_) => {
 
     try {
         const firestore = getFirestore();
