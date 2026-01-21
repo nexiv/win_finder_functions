@@ -3,7 +3,7 @@ import { getFirestore } from "firebase-admin/firestore";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 
 
-export const deleteUser = onCall({ region: 'europe-west1' }, async (req) => {
+export const deleteUser = onCall({ region: 'europe-west1', enforceAppCheck: true }, async (req) => {
     if (!req.auth) {
         throw new HttpsError("unauthenticated", "");
     }
