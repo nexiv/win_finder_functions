@@ -5,6 +5,7 @@ import { updateStandings } from "./functions/update_standings";
 import { cleanDatabase } from "./functions/clean_database";
 import { generateResults } from "./functions/generate_results";
 import { buildBacktestFile } from "./functions/build_backtest_file";
+import { runBacktest } from "./functions/run_backtest";
 
 initializeApp();
 setGlobalOptions({ region: 'europe-west1', timeoutSeconds: 300 });
@@ -14,4 +15,5 @@ exports.updateStandings = updateStandings;
 exports.cleanDatabase = cleanDatabase;
 exports.generateResults = generateResults;
 exports.buildBacktestFile = buildBacktestFile;
+exports.runBacktest = runBacktest;
 
