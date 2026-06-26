@@ -2,11 +2,11 @@ import { Firestore, getFirestore } from "firebase-admin/firestore";
 import { HEADERS, URL } from "../config";
 import { onSchedule } from "firebase-functions/v2/scheduler";
 
-const GAME_DURATION_BUFFER_MS = 110 * 60 * 1000; // 110 minutes
+const GAME_DURATION_BUFFER_MS = 120 * 60 * 1000; // 120 minutes
 const COLLECTION = "game-result-v1";
 const API_CHUNK_SIZE = 20;
 
-export const updateResults =  onSchedule({schedule: 'every 30 minutes', region: 'europe-west1'}, async () => {
+export const updateResults =  onSchedule({schedule: 'every 15 minutes', region: 'europe-west1'}, async () => {
     try {
         const firestore = getFirestore();
         const cutoffTime = Date.now() - GAME_DURATION_BUFFER_MS;
