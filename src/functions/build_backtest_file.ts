@@ -26,7 +26,7 @@ function decodeDay(buf: Uint8Array): Entry[] {
 // the last RETENTION_DAYS days. Each day it appends new matches and prunes old ones.
 export const buildBacktestFile = onSchedule(
   {
-    schedule: "every day 03:00", // after generateResults (02:00)
+    schedule: "every day 04:00", // after generateResults (03:00)
     region: "europe-west1",
     timeoutSeconds: 540,
     memory: "1GiB",
@@ -74,7 +74,9 @@ export const buildBacktestFile = onSchedule(
 
       for (const g of games) {
         const res = resultById.get(g.i);
-        if (!res) continue; // a match without a result is skipped
+        // A canceled or still-unfinished match is stored as an empty array, and `[]`
+        // is truthy — without the length check makeRecord would turn it into 0-0.
+        if (!res || res.length !== 4) continue; // a match without a result is skipped
         newChunks.push(makeRecord(day, res, g.s));
       }
       addedDays++;
